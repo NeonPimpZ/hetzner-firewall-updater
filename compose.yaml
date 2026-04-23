@@ -1,0 +1,7 @@
+services:
+  hetzner-ip-updater:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+networks: {}

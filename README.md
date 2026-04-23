@@ -1,0 +1,66 @@
+# hetzner-firewall-updater
+
+Keeps a Hetzner Cloud firewall rule in sync with your current home IP. Useful when your ISP assigns a dynamic IP and you want to restrict server access to your home address only.
+
+The container runs the update script once on startup, then again every day at 05:00 via cron. If the IP hasn't changed since the last run, nothing happens.
+
+## How it works
+
+1. Fetches your current public IPv4 from [ipify.org](https://api4.ipify.org)
+2. Looks up the named firewall via the Hetzner Cloud API
+3. Finds the rule identified by `RULE_DESCRIPTION`
+4. Replaces its `source_ips` with `<current-ip>/32` — leaving all other rules untouched
+5. Logs what it did (or skips silently if the IP is unchanged)
+
+## Prerequisites
+
+- A Hetzner Cloud project with an existing firewall
+- A firewall rule whose **description** matches `RULE_DESCRIPTION` (e.g. `home-ip`)
+- A Hetzner Cloud API token with **read + write** permissions
+- Docker + Docker Compose
+
+## Setup
+
+### 1. Create the firewall rule in Hetzner Cloud
+
+In the Hetzner Cloud console, open your firewall and add an inbound rule. Set the description to whatever you'll use as `RULE_DESCRIPTION` (default: `home-ip`). The source IP can be anything — the script will overwrite it on first run.
+
+### 2. Get an API token
+
+Go to your Hetzner Cloud project → **Security** → **API Tokens** → **Generate API Token**. Select **Read & Write**.
+
+### 3. Configure environment
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and fill in the three values:
+
+| Variable | Required | Description |
+| --- | --- | --- |
+| `API_TOKEN` | yes | Hetzner Cloud API token (read+write) |
+| `FIREWALL_NAME` | yes | Exact name of the firewall to update |
+| `RULE_DESCRIPTION` | no | Description of the rule to update (default: `home-ip`) |
+
+### 4. Run
+
+```bash
+docker compose up -d
+```
+
+Logs are forwarded to Docker's stdout:
+
+```bash
+docker compose logs -f
+```
+
+## Files
+
+| File | Purpose |
+| --- | --- |
+| `update-hetzner-home-ip.sh` | Core script — fetches IP, diffs, updates firewall |
+| `entrypoint.sh` | Runs the script once on startup, then starts cron |
+| `Dockerfile` | Alpine-based image with `curl`, `jq`, and `bash` |
+| `compose.yaml` | Docker Compose service definition |
+| `.env.example` | Template for required environment variables |
