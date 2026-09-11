@@ -70,3 +70,5 @@ docker compose logs -f
 | `entrypoint.sh`             | Runs the script once on startup, then starts cron |
 | `Dockerfile`                | Alpine-based image with `curl`, `jq`, and `bash`  |
 | `compose.yaml`              | Docker Compose service definition                 |
+
+The GitHub Actions workflow in `.github/workflows/docker-publish.yml` builds the image on every push to `main` and on `v*.*.*` tags, publishing it to `ghcr.io/<owner>/hetzner-updater`.
