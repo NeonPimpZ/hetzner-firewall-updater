@@ -15,7 +15,7 @@ The container runs the update script once on startup, then again every day at 05
 ## Prerequisites
 
 - A Hetzner Cloud project with an existing firewall
-- A firewall rule whose **description** matches `RULE_DESCRIPTION` (e.g. `home-ip`)
+- A firewall rule whose **description** matches `RULE_DESCRIPTION` exactly (e.g. `home-ip`)
 - A Hetzner Cloud API token with **read + write** permissions
 - Docker + Docker Compose
 
@@ -23,7 +23,7 @@ The container runs the update script once on startup, then again every day at 05
 
 ### 1. Create the firewall rule in Hetzner Cloud
 
-In the Hetzner Cloud console, open your firewall and add an inbound rule. Set the description to whatever you'll use as `RULE_DESCRIPTION` (default: `home-ip`). The source IP can be anything — the script will overwrite it on first run.
+In the Hetzner Cloud console, open your firewall and add an inbound rule. Set the description to whatever you'll use as `RULE_DESCRIPTION` — that description is how the script finds the rule, so the two must match exactly. The source IP can be anything; the script overwrites it on first run.
 
 ### 2. Get an API token
 
@@ -31,23 +31,30 @@ Go to your Hetzner Cloud project → **Security** → **API Tokens** → **Gener
 
 ### 3. Configure environment
 
-```bash
-cp .env.example .env
-```
+Configuration comes from environment variables — `compose.yaml` reads them from the environment you run `docker compose` in:
 
-Edit `.env` and fill in the three values:
-
-| Variable | Required | Description |
-| --- | --- | --- |
-| `API_TOKEN` | yes | Hetzner Cloud API token (read+write) |
-| `FIREWALL_NAME` | yes | Exact name of the firewall to update |
-| `RULE_DESCRIPTION` | no | Description of the rule to update (default: `home-ip`) |
+| Variable           | Required | Description                                                                |
+| ------------------ | -------- | -------------------------------------------------------------------------- |
+| `API_TOKEN`        | yes      | Hetzner Cloud API token (read+write)                                       |
+| `FIREWALL_NAME`    | yes      | Exact name of the firewall to update                                       |
+| `RULE_DESCRIPTION` | yes      | Description of the rule to update — must match the rule in Hetzner exactly |
 
 ### 4. Run
 
 ```bash
+export API_TOKEN=your-token
+export FIREWALL_NAME=your-firewall
+export RULE_DESCRIPTION=home-ip
 docker compose up -d
 ```
+
+Or inline for a single run:
+
+```bash
+API_TOKEN=... FIREWALL_NAME=... RULE_DESCRIPTION=... docker compose up -d
+```
+
+If you prefer a file, Compose still picks up a `.env` next to `compose.yaml` and uses it to resolve these variables.
 
 Logs are forwarded to Docker's stdout:
 
@@ -57,10 +64,9 @@ docker compose logs -f
 
 ## Files
 
-| File | Purpose |
-| --- | --- |
+| File                        | Purpose                                           |
+| --------------------------- | ------------------------------------------------- |
 | `update-hetzner-home-ip.sh` | Core script — fetches IP, diffs, updates firewall |
-| `entrypoint.sh` | Runs the script once on startup, then starts cron |
-| `Dockerfile` | Alpine-based image with `curl`, `jq`, and `bash` |
-| `compose.yaml` | Docker Compose service definition |
-| `.env.example` | Template for required environment variables |
+| `entrypoint.sh`             | Runs the script once on startup, then starts cron |
+| `Dockerfile`                | Alpine-based image with `curl`, `jq`, and `bash`  |
+| `compose.yaml`              | Docker Compose service definition                 |

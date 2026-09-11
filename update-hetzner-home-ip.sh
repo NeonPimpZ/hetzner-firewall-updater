@@ -3,7 +3,7 @@ set -euo pipefail
 
 API_TOKEN="${API_TOKEN:?API_TOKEN not set}"
 FIREWALL_NAME="${FIREWALL_NAME:?FIREWALL_NAME not set}"
-RULE_DESCRIPTION="${RULE_DESCRIPTION:-home-ip}"
+RULE_DESCRIPTION="${RULE_DESCRIPTION:?RULE_DESCRIPTION not set}"
 
 CURRENT_IP=$(curl -s https://api4.ipify.org)
 if [[ -z "$CURRENT_IP" ]]; then

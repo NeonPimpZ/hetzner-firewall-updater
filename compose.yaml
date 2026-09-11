@@ -2,6 +2,8 @@ services:
   hetzner-ip-updater:
     build: .
     restart: unless-stopped
-    env_file:
-      - .env
+    environment:
+      API_TOKEN: ${API_TOKEN:?API_TOKEN is required}
+      FIREWALL_NAME: ${FIREWALL_NAME:?FIREWALL_NAME is required}
+      RULE_DESCRIPTION: ${RULE_DESCRIPTION:?RULE_DESCRIPTION is required}
 networks: {}
