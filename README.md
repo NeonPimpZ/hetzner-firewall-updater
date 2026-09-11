@@ -10,7 +10,6 @@ The container runs the update script once on startup, then again every day at 05
 2. Looks up the named firewall via the Hetzner Cloud API
 3. Finds the rule identified by `RULE_DESCRIPTION`
 4. Replaces its `source_ips` with `<current-ip>/32` — leaving all other rules untouched
-5. Logs what it did (or skips silently if the IP is unchanged)
 
 ## Prerequisites
 
@@ -31,7 +30,7 @@ Go to your Hetzner Cloud project → **Security** → **API Tokens** → **Gener
 
 ### 3. Configure environment
 
-Configuration comes from environment variables — `compose.yaml` reads them from the environment you run `docker compose` in:
+All three variables are required — the container exits immediately if any is missing:
 
 | Variable           | Required | Description                                                                |
 | ------------------ | -------- | -------------------------------------------------------------------------- |
@@ -39,7 +38,22 @@ Configuration comes from environment variables — `compose.yaml` reads them fro
 | `FIREWALL_NAME`    | yes      | Exact name of the firewall to update                                       |
 | `RULE_DESCRIPTION` | yes      | Description of the rule to update — must match the rule in Hetzner exactly |
 
-### 4. Run
+**Set them in the compose file.** Write the values straight into the service's `environment:` block, as in `compose.example.yaml`:
+
+```yaml
+services:
+  hetzner-ip-updater:
+    image: ghcr.io/neonpimpz/hetzner-firewall-updater:latest
+    restart: unless-stopped
+    environment:
+      - API_TOKEN=<your-api-token>
+      - FIREWALL_NAME=<firewall-name>
+      - RULE_DESCRIPTION=<firewall-rule-description>
+```
+
+This is the simplest option for a server or a Portainer stack.
+
+**Pass them from your shell.** `compose.yaml` in this repo uses `${API_TOKEN:?...}` placeholders instead, so the values come from the environment you run `docker compose` in and never touch the file:
 
 ```bash
 export API_TOKEN=your-token
@@ -54,13 +68,15 @@ Or inline for a single run:
 API_TOKEN=... FIREWALL_NAME=... RULE_DESCRIPTION=... docker compose up -d
 ```
 
-If you prefer a file, Compose still picks up a `.env` next to `compose.yaml` and uses it to resolve these variables.
+Compose also picks up a `.env` next to `compose.yaml` and uses it to resolve those placeholders, if you prefer a file.
 
-`compose.yaml` builds the image locally. To deploy without cloning the repo, use the prebuilt image from GHCR instead — copy `compose.example.yaml` to your server as `compose.yaml` and run the same command:
+### 4. Run
 
 ```bash
 docker compose up -d
 ```
+
+`compose.yaml` builds the image from this checkout. To deploy without cloning the repo, use the prebuilt image from GHCR instead — copy `compose.example.yaml` to your server as `compose.yaml`, fill in the three values, and run the same command.
 
 Logs are forwarded to Docker's stdout:
 
