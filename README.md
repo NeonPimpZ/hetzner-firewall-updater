@@ -56,6 +56,12 @@ API_TOKEN=... FIREWALL_NAME=... RULE_DESCRIPTION=... docker compose up -d
 
 If you prefer a file, Compose still picks up a `.env` next to `compose.yaml` and uses it to resolve these variables.
 
+`compose.yaml` builds the image locally. To deploy without cloning the repo, use the prebuilt image from GHCR instead — copy `compose.example.yaml` to your server as `compose.yaml` and run the same command:
+
+```bash
+docker compose up -d
+```
+
 Logs are forwarded to Docker's stdout:
 
 ```bash
@@ -69,6 +75,5 @@ docker compose logs -f
 | `update-hetzner-home-ip.sh` | Core script — fetches IP, diffs, updates firewall |
 | `entrypoint.sh`             | Runs the script once on startup, then starts cron |
 | `Dockerfile`                | Alpine-based image with `curl`, `jq`, and `bash`  |
-| `compose.yaml`              | Docker Compose service definition                 |
-
-The GitHub Actions workflow in `.github/workflows/docker-publish.yml` builds the image on every push to `main` and on `v*.*.*` tags, publishing it to `ghcr.io/<owner>/hetzner-updater`.
+| `compose.yaml`              | Compose service that builds the image locally     |
+| `compose.example.yaml`      | Compose service that pulls the prebuilt image     |

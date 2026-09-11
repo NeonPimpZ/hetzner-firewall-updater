@@ -1,0 +1,13 @@
+# Example deployment using the prebuilt image from GHCR.
+# Copy this to your server as compose.yaml — no repo checkout needed.
+#
+#   API_TOKEN=... FIREWALL_NAME=... RULE_DESCRIPTION=... docker compose up -d
+services:
+  hetzner-ip-updater:
+    image: ghcr.io/neonpimpz/hetzner-updater:latest
+    restart: unless-stopped
+    environment:
+      API_TOKEN: ${API_TOKEN:?API_TOKEN is required}
+      FIREWALL_NAME: ${FIREWALL_NAME:?FIREWALL_NAME is required}
+      RULE_DESCRIPTION: ${RULE_DESCRIPTION:?RULE_DESCRIPTION is required}
+networks: {}
